@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException, TimeoutException
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 
 
@@ -13,15 +14,15 @@ def checker(email: str, proxy: str = None) -> Optional[bool]:
     chrome_options = Options()
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     chrome_options.add_argument("--proxy-bypass-list=*")
+    chrome_options.add_argument("accept-lang=en")
     chrome_options.add_argument("--headless=new")
 
     if proxy:
         proxy_type = "http" if "http" in proxy else "socks5"
         chrome_options.add_argument(f"--proxy-server={proxy_type}://{proxy.split('://')[-1]}")
 
-    service = Service("chromedriver.exe")
+    service = Service(ChromeDriverManager().install())
 
     try:
         driver = webdriver.Chrome(service=service, options=chrome_options)
@@ -77,7 +78,8 @@ def checker(email: str, proxy: str = None) -> Optional[bool]:
         time.sleep(3)
         driver.quit()
 
+
 if __name__ == "__main__":
-    print(checker("ivan@mail.com", proxy="socks5://Fm8TZZ6mKdKfegEAlvs9:RNW78Fm5@185.162.130.86:10002"))# True использованная почта
-    print(checker("lumisje19@gmail.com", proxy="http://0gO1dIGMdOks1qnmw8rt:RNW78Fm5@185.162.130.86:10001"))# False неиспользованная почта
-    print(checker("lumsdfdfaa.com", proxy="http://0gO1dIGMdOks1qnmw8rt:RNW78Fm5@185.162.130.86:10002"))# None Случай когда написана некорректная почта или сайт apple выдает ответ "Cannot verify"
+    print(checker("ivan@mail.com", proxy="socks5://Fm8TZZ6mKdKfegEAlvs9:RNW78Fm5@185.162.130.86:10002"))  # True использованная почта
+    print(checker("lumisje19@gmail.com", proxy="http://0gO1dIGMdOks1qnmw8rt:RNW78Fm5@185.162.130.86:10001"))  # False неиспользованная почта
+    print(checker("lumsdfdfaa.com", proxy="http://0gO1dIGMdOks1qnmw8rt:RNW78Fm5@185.162.130.86:10002"))  # None некорректная почта

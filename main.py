@@ -8,6 +8,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException, TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 import time
+import re
+import platform
+import os
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def checker(email: str, proxy: str = None) -> Optional[bool]:
@@ -22,10 +30,19 @@ def checker(email: str, proxy: str = None) -> Optional[bool]:
         proxy_type = "http" if "http" in proxy else "socks5"
         chrome_options.add_argument(f"--proxy-server={proxy_type}://{proxy.split('://')[-1]}")
 
-    service = Service(ChromeDriverManager().install())
+    driver = None
 
     try:
+        logger.info("Installing ChromeDriver...")
+        driver_path = ChromeDriverManager().install()
+        os.chmod(driver_path, 0o755)
+        service = Service(driver_path)
+        logger.info("ChromeDriver installed successfully.")
+
+        logger.info("Initializing WebDriver...")
         driver = webdriver.Chrome(service=service, options=chrome_options)
+        logger.info("WebDriver initialized successfully.")
+
         driver.get("https://appleid.apple.com/account#!&page=create")
 
         wait = WebDriverWait(driver, 60)
@@ -71,12 +88,14 @@ def checker(email: str, proxy: str = None) -> Optional[bool]:
         except TimeoutException:
             return False
 
-    except (WebDriverException, TimeoutException):
+    except (WebDriverException, TimeoutException) as e:
+        logger.error(f"Error: {e}")
         return None
 
     finally:
-        time.sleep(3)
-        driver.quit()
+        if driver:
+            time.sleep(3)
+            driver.quit()
 
 
 if __name__ == "__main__":
